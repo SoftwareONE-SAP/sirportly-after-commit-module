@@ -51,13 +51,17 @@ module Sirportly
         # Add self. to make this a class method
         def self.check_config(config, event)
           uri = URI.parse(config[:refresh_url])
-          uri.is_a?(URI::HTTP) && (!config[:require_endpoint] || !config[event].blank?)
+          uri.is_a?(URI::HTTP) && ((config[:require_endpoint] == 'No') || !config[event].blank?)
         end
 
         # Add self. to make this a class method
         def self.make_request(config, event, ticket)
           if check_config(config, event)
-            uri = "#{config[:refresh_url].sub(/\/$/, '')}/#{config[event]}"
+            uri = "#{config[:refresh_url]}"
+            if !config[event].blank?
+              uri.sub(/\/$/, '')
+              uri << "/#{config[event]}"
+            end
             uri << ( config[:query_string].blank? ? "" : "?#{config[:query_string]}" )
             ticket_payload = "{\"id\":#{ticket.id}}"
             Sirportly::HTTP.post(uri, {ticket: ticket_payload})
